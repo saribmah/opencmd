@@ -9,8 +9,7 @@ use opencmd_protocol::{
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
-use tokio::sync::RwLock;
-use tracing::{debug, error, info, warn};
+use tracing::{debug, info, warn};
 
 // Forward reference to avoid circular dependency
 // In real code, this would be properly abstracted
@@ -100,7 +99,7 @@ impl ExtensionHost {
         // Validate manifest based on type
         self.validate_manifest(&manifest)?;
 
-        let extension = self.registry.register(manifest.clone(), path.clone())?;
+        let _extension = self.registry.register(manifest.clone(), path.clone())?;
 
         // Publish event
         if let Some(ref publisher) = self.event_publisher {
@@ -158,7 +157,7 @@ impl ExtensionHost {
             .ok_or_else(|| ExtensionError::NotFound(request.extension_id.clone()))?;
 
         // Verify command exists
-        let command = extension
+        let _command = extension
             .manifest
             .commands
             .iter()
@@ -198,7 +197,22 @@ impl ExtensionHost {
             .as_ref()
             .ok_or_else(|| ExtensionError::Runtime("No runner config".to_string()))?;
 
-        let session = RunnerSession::spawn(runner_config, request.input.as_deref())?;
+        // Find the command to check for command-specific args
+        let command = extension
+            .manifest
+            .commands
+            .iter()
+            .find(|c| c.id == request.command_id);
+
+        // Use command-specific args if available, otherwise use runner default args
+        let mut effective_config = runner_config.clone();
+        if let Some(cmd) = command {
+            if let Some(ref cmd_args) = cmd.args {
+                effective_config.args = cmd_args.clone();
+            }
+        }
+
+        let session = RunnerSession::spawn(&effective_config, request.input.as_deref())?;
         let session_id = session.id.clone();
 
         // Note: In real implementation, we'd store the session and set up output streaming

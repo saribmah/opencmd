@@ -51,6 +51,9 @@ pub struct ExtensionCommand {
     /// Keywords for search/filtering
     #[serde(default)]
     pub keywords: Vec<String>,
+    /// Command-specific args (overrides runner.args for runner extensions)
+    #[serde(default)]
+    pub args: Option<Vec<String>>,
 }
 
 /// Network permission for integration extensions.

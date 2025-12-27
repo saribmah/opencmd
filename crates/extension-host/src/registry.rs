@@ -6,7 +6,7 @@ use fuzzy_matcher::skim::SkimMatcherV2;
 use fuzzy_matcher::FuzzyMatcher;
 use std::collections::HashMap;
 use std::path::PathBuf;
-use tracing::{debug, info};
+use tracing::info;
 use uuid::Uuid;
 
 /// Registry of loaded extensions.

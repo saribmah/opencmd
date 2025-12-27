@@ -6,22 +6,44 @@
   "description": "Run Claude Code CLI for AI-powered coding assistance",
   "runner": {
     "command": "claude",
-    "args": ["-p", "{{prompt}}"],
+    "args": [],
     "interactive": true,
     "pty": true
   },
   "commands": [
     {
-      "id": "run",
-      "name": "Run Claude Code",
-      "description": "Start an AI coding session with Claude",
-      "keywords": ["claude", "ai", "code", "assistant", "anthropic"]
+      "id": "open",
+      "name": "Open Claude Code",
+      "description": "Start an interactive Claude Code session",
+      "keywords": ["claude", "ai", "code", "assistant", "anthropic", "chat", "open"]
     },
     {
-      "id": "chat",
-      "name": "Claude Code Chat",
-      "description": "Quick chat with Claude Code",
-      "keywords": ["claude", "chat", "ask", "question"]
+      "id": "prompt",
+      "name": "Claude Code: Ask",
+      "description": "Ask Claude Code a one-shot question",
+      "keywords": ["claude", "ask", "question", "prompt", "query"],
+      "args": ["-p", "{{prompt}}"]
+    },
+    {
+      "id": "continue",
+      "name": "Claude Code: Continue",
+      "description": "Continue the most recent conversation",
+      "keywords": ["claude", "continue", "resume", "last"],
+      "args": ["--continue"]
+    },
+    {
+      "id": "resume",
+      "name": "Claude Code: Resume Session",
+      "description": "Resume a previous Claude Code session",
+      "keywords": ["claude", "resume", "session", "history"],
+      "args": ["--resume"]
+    },
+    {
+      "id": "print-context",
+      "name": "Claude Code: Print Context",
+      "description": "Print the system prompt and context",
+      "keywords": ["claude", "context", "system", "prompt", "print"],
+      "args": ["--print-context"]
     }
   ],
   "permissions": ["process:spawn", "pty"]

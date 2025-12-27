@@ -30,6 +30,8 @@ export interface ExtensionCommand {
   description?: string;
   /** Keywords for search/filtering */
   keywords?: string[];
+  /** Command-specific args (overrides runner.args for runner extensions) */
+  args?: string[];
 }
 
 /** Network permission for integration extensions. */
