@@ -1,14 +1,21 @@
-import { useEffect, useState, useCallback } from "react";
-import { Command } from "cmdk";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import {
+  CommandPalette,
+  CommandItem,
+  CommandEmpty,
+  CommandGroup,
+} from "@opencmd/ui";
 import type { SearchResult } from "@opencmd/protocol";
 import "./App.css";
 
 function App() {
-  const [open, setOpen] = useState(true);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [initialized, setInitialized] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Initialize the app on mount
   useEffect(() => {
@@ -16,6 +23,8 @@ function App() {
       try {
         await invoke("initialize");
         setInitialized(true);
+        // Show window after initialization
+        await invoke("show_window");
       } catch (error) {
         console.error("Failed to initialize:", error);
       }
@@ -28,102 +37,137 @@ function App() {
     if (!initialized) return;
 
     async function search() {
+      setLoading(true);
       try {
         const searchResults = await invoke<SearchResult[]>("search", {
           query,
-          limit: 20,
+          limit: 10,
         });
         setResults(searchResults);
       } catch (error) {
         console.error("Search failed:", error);
+      } finally {
+        setLoading(false);
       }
     }
 
-    const debounce = setTimeout(search, 100);
+    const debounce = setTimeout(search, 50);
     return () => clearTimeout(debounce);
   }, [query, initialized]);
 
   // Handle command selection
-  const handleSelect = useCallback(async (result: SearchResult) => {
-    try {
-      const response = await invoke("execute", {
-        extensionId: result.extensionId,
-        commandId: result.commandId,
-        input: query,
-      });
-      console.log("Execute result:", response);
-      // Handle the result based on type
-    } catch (error) {
-      console.error("Execute failed:", error);
-    }
-  }, [query]);
-
-  // Toggle with keyboard shortcut
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        setOpen((prev) => !prev);
+  const handleSelect = useCallback(
+    async (result: SearchResult) => {
+      try {
+        const response = await invoke("execute", {
+          extensionId: result.extension_id,
+          commandId: result.command_id,
+          input: query,
+        });
+        console.log("Execute result:", response);
+        // Hide window after execution
+        await invoke("hide_window");
+        // Reset state for next invocation
+        setQuery("");
+      } catch (error) {
+        console.error("Execute failed:", error);
       }
-      if (e.key === "Escape") {
-        setOpen(false);
-      }
-    };
+    },
+    [query]
+  );
 
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
+  // Hide window on escape
+  const handleEscape = useCallback(async () => {
+    await invoke("hide_window");
+    setQuery("");
   }, []);
 
+  // Hide window on blur (click outside)
+  useEffect(() => {
+    const appWindow = getCurrentWebviewWindow();
+    
+    const unlisten = appWindow.onFocusChanged(({ payload: focused }) => {
+      if (!focused) {
+        invoke("hide_window");
+        setQuery("");
+      }
+    });
+
+    return () => {
+      unlisten.then((fn) => fn());
+    };
+  }, []);
+
+  // Group results by extension
+  const groupedResults = results.reduce(
+    (acc, result) => {
+      const key = result.extension_id;
+      if (!acc[key]) {
+        acc[key] = [];
+      }
+      acc[key].push(result);
+      return acc;
+    },
+    {} as Record<string, SearchResult[]>
+  );
+
   return (
-    <div className="app">
-      <Command.Dialog
-        open={open}
-        onOpenChange={setOpen}
-        className="command-dialog"
-        label="Command Palette"
+    <div className="app" ref={containerRef}>
+      <CommandPalette
+        value={query}
+        onValueChange={setQuery}
+        onEscape={handleEscape}
+        placeholder={initialized ? "Type a command or search..." : "Initializing..."}
+        loading={loading}
+        className="command-root"
       >
-        <Command.Input
-          placeholder="Type a command or search..."
-          value={query}
-          onValueChange={setQuery}
-          className="command-input"
-        />
-
-        <Command.List className="command-list">
-          <Command.Empty className="command-empty">
-            {initialized ? "No results found." : "Initializing..."}
-          </Command.Empty>
-
-          {results.map((result) => (
-            <Command.Item
-              key={result.id}
-              value={result.id}
-              onSelect={() => handleSelect(result)}
-              className="command-item"
-            >
-              <div className="command-item-content">
-                <span className="command-item-name">{result.name}</span>
-                {result.description && (
-                  <span className="command-item-description">
-                    {result.description}
-                  </span>
-                )}
-              </div>
-              <span className="command-item-extension">
-                {result.extensionId}
-              </span>
-            </Command.Item>
-          ))}
-        </Command.List>
-      </Command.Dialog>
-
-      {!open && (
-        <div className="hint">
-          Press <kbd>Cmd</kbd> + <kbd>K</kbd> to open command palette
-        </div>
-      )}
+        {!initialized ? (
+          <CommandEmpty>Initializing...</CommandEmpty>
+        ) : results.length === 0 && query ? (
+          <CommandEmpty>No results found for "{query}"</CommandEmpty>
+        ) : results.length === 0 ? (
+          <CommandEmpty className="command-hint">
+            Start typing to search commands...
+          </CommandEmpty>
+        ) : (
+          Object.entries(groupedResults).map(([extensionId, items]) => (
+            <CommandGroup key={extensionId} heading={formatExtensionName(extensionId)}>
+              {items.map((result) => (
+                <CommandItem
+                  key={result.id}
+                  id={result.id}
+                  name={result.name}
+                  description={result.description}
+                  onSelect={() => handleSelect(result)}
+                  className="command-item"
+                  icon={<ExtensionIcon extensionId={extensionId} />}
+                />
+              ))}
+            </CommandGroup>
+          ))
+        )}
+      </CommandPalette>
     </div>
   );
+}
+
+// Format extension ID to display name
+function formatExtensionName(extensionId: string): string {
+  return extensionId
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+// Simple icon component based on extension type
+function ExtensionIcon({ extensionId }: { extensionId: string }) {
+  const icons: Record<string, string> = {
+    "claude-code": "🤖",
+    "opencode": "⚡",
+    "shell": "💻",
+    "github-pr": "🐙",
+  };
+  return <span>{icons[extensionId] || "📦"}</span>;
 }
 
 export default App;

@@ -15,8 +15,9 @@ tauri-build = { workspace = true }
 
 [dependencies]
 # Tauri
-tauri = { workspace = true }
+tauri = { workspace = true, features = ["macos-private-api"] }
 tauri-plugin-opener = { workspace = true }
+tauri-plugin-global-shortcut = "2"
 
 # Serialization
 serde = { workspace = true }

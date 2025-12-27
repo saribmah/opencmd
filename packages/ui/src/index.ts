@@ -4,7 +4,7 @@
  * Reusable React components for the command palette interface.
  */
 
-export { CommandPalette } from "./command-palette";
+export { CommandPalette, CommandEmpty, CommandGroup } from "./command-palette";
 export { CommandInput } from "./command-input";
 export { CommandList } from "./command-list";
 export { CommandItem } from "./command-item";
@@ -12,7 +12,7 @@ export { TerminalView } from "./terminal-view";
 export { StatusBadge } from "./status-badge";
 
 // Re-export types
-export type { CommandPaletteProps } from "./command-palette";
+export type { CommandPaletteProps, CommandEmptyProps, CommandGroupProps } from "./command-palette";
 export type { CommandInputProps } from "./command-input";
 export type { CommandListProps } from "./command-list";
 export type { CommandItemProps } from "./command-item";

@@ -1,8 +1,7 @@
 /**
- * Command list component.
+ * Command list component - container for command items.
  */
 
-import { Command } from "cmdk";
 import type { ReactNode } from "react";
 
 export interface CommandListProps {
@@ -13,10 +12,7 @@ export interface CommandListProps {
 }
 
 export function CommandList({ children, className }: CommandListProps) {
-  return (
-    <Command.List className={className}>
-      <Command.Empty>No results found.</Command.Empty>
-      {children}
-    </Command.List>
-  );
+  // Note: The actual Command.List is rendered by CommandPalette
+  // This is a semantic wrapper for organizing items
+  return <div className={className}>{children}</div>;
 }

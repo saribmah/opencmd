@@ -4,10 +4,11 @@ A macOS productivity app for orchestrating AI coding tools and integrations. Thi
 
 ## Features
 
-- **Command Palette** - Fast, fuzzy-searchable launcher (Cmd+K)
+- **Command Palette** - Fast, fuzzy-searchable launcher (`Cmd+Shift+O`)
 - **Runner Extensions** - Spawn and manage CLI tools like Claude Code, OpenCode, Aider with PTY support
 - **Integration Extensions** - Connect to APIs like GitHub, Linear, Jira via sandboxed WASM runtime
 - **Unified Interface** - One place to access all your AI coding assistants
+- **Raycast-like UX** - Frameless floating window, blur on focus loss, global hotkey
 
 ## Getting Started
 
@@ -30,6 +31,14 @@ bun install
 # Run in development mode
 bun run tauri dev
 ```
+
+### Accessibility Permissions
+
+For the global hotkey (`Cmd+Shift+O`) to work, you need to grant accessibility permissions:
+
+1. Open **System Settings** > **Privacy & Security** > **Accessibility**
+2. Click the **+** button and add **OpenCMD** (or the Terminal app if running in dev mode)
+3. Restart the app
 
 ### Build for Production
 

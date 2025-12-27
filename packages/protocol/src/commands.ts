@@ -1,5 +1,8 @@
 /**
  * Command palette related types.
+ * 
+ * Note: These match Rust structs exactly (snake_case) since we don't
+ * configure serde to rename to camelCase.
  */
 
 /** A searchable command shown in the command palette. */
@@ -7,9 +10,9 @@ export interface SearchResult {
   /** Unique identifier (extension_id:command_id) */
   id: string;
   /** Extension that provides this command */
-  extensionId: string;
+  extension_id: string;
   /** Command ID within the extension */
-  commandId: string;
+  command_id: string;
   /** Display name */
   name: string;
   /** Optional description */
@@ -31,9 +34,9 @@ export interface SearchRequest {
 /** Request to execute a command. */
 export interface ExecuteRequest {
   /** Extension ID */
-  extensionId: string;
+  extension_id: string;
   /** Command ID within the extension */
-  commandId: string;
+  command_id: string;
   /** Optional input/prompt */
   input?: string;
 }
@@ -49,7 +52,7 @@ export interface ExecuteResultSuccess {
 export interface ExecuteResultProcess {
   type: "process";
   /** Process/session ID for tracking */
-  sessionId: string;
+  session_id: string;
 }
 
 /** Result of command execution - error variant. */
