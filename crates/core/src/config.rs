@@ -5,6 +5,40 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use tracing::info;
 
+/// Check if we're running in dev mode.
+/// In dev mode, we use the project's extensions folder.
+fn is_dev_mode() -> bool {
+    // Check debug assertions (set during cargo build without --release)
+    cfg!(debug_assertions)
+}
+
+/// Get the project extensions directory (for dev mode).
+/// Uses compile-time CARGO_MANIFEST_DIR to locate the project root.
+fn project_extensions_dir() -> Option<PathBuf> {
+    // CARGO_MANIFEST_DIR is set at compile time by cargo
+    // It points to the crate's directory (crates/core in this case)
+    let manifest_dir = env!("CARGO_MANIFEST_DIR");
+    let manifest_path = PathBuf::from(manifest_dir);
+    
+    // Go up from crates/core -> crates -> project root
+    if let Some(project_root) = manifest_path.parent()?.parent() {
+        let extensions_path = project_root.join("extensions");
+        if extensions_path.exists() {
+            return Some(extensions_path);
+        }
+    }
+    
+    // Fallback: try current working directory
+    if let Ok(cwd) = std::env::current_dir() {
+        let extensions_path = cwd.join("extensions");
+        if extensions_path.exists() {
+            return Some(extensions_path);
+        }
+    }
+    
+    None
+}
+
 /// Application configuration.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
@@ -26,6 +60,14 @@ pub struct Config {
 }
 
 fn default_extensions_dir() -> PathBuf {
+    // In dev mode, prefer the project's extensions folder
+    if is_dev_mode() {
+        if let Some(dev_extensions) = project_extensions_dir() {
+            return dev_extensions;
+        }
+    }
+    
+    // Production: use app data directory
     dirs().map(|d| d.join("extensions")).unwrap_or_else(|| PathBuf::from("extensions"))
 }
 
@@ -79,6 +121,12 @@ impl ConfigManager {
             info!("No config found, using defaults");
             Config::default()
         };
+
+        info!(
+            "Running in {} mode, extensions dir: {:?}",
+            if is_dev_mode() { "dev" } else { "production" },
+            config.extensions_dir
+        );
 
         Ok(Self { config, config_path })
     }

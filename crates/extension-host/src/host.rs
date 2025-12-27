@@ -11,6 +11,21 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use tracing::{debug, info, warn};
 
+/// Escape arguments for shell execution.
+fn shell_escape_args(args: &[String]) -> String {
+    args.iter()
+        .map(|arg| {
+            if arg.contains(' ') || arg.contains('"') || arg.contains('\'') || arg.contains('\\') {
+                // Wrap in single quotes and escape any single quotes
+                format!("'{}'", arg.replace("'", "'\\''"))
+            } else {
+                arg.clone()
+            }
+        })
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
 // Forward reference to avoid circular dependency
 // In real code, this would be properly abstracted
 pub trait ConfigProvider: Send + Sync {
@@ -185,7 +200,7 @@ impl ExtensionHost {
         }
     }
 
-    /// Execute a runner extension (spawn PTY process).
+    /// Execute a runner extension (spawn PTY process or open in terminal).
     async fn execute_runner(
         &self,
         extension: &opencmd_protocol::Extension,
@@ -212,6 +227,14 @@ impl ExtensionHost {
             }
         }
 
+        // For interactive runners, open in external terminal
+        if effective_config.interactive {
+            self.open_in_terminal(&effective_config, request.input.as_deref())
+                .await?;
+            return Ok(ExecuteResult::Success { output: None });
+        }
+
+        // For non-interactive runners, spawn PTY
         let session = RunnerSession::spawn(&effective_config, request.input.as_deref())?;
         let session_id = session.id.clone();
 
@@ -219,6 +242,52 @@ impl ExtensionHost {
         // self.runner_sessions.insert(session_id.clone(), session);
 
         Ok(ExecuteResult::Process { session_id })
+    }
+
+    /// Open a runner command in the system terminal.
+    async fn open_in_terminal(
+        &self,
+        config: &opencmd_protocol::RunnerConfig,
+        input: Option<&str>,
+    ) -> Result<()> {
+        // Build the command string with argument substitution
+        let args: Vec<String> = config
+            .args
+            .iter()
+            .map(|arg| {
+                if let Some(input) = input {
+                    arg.replace("{{prompt}}", input)
+                } else {
+                    arg.replace("{{prompt}}", "")
+                }
+            })
+            .collect();
+
+        // Build the full command
+        let full_command = if args.is_empty() {
+            config.command.clone()
+        } else {
+            format!("{} {}", config.command, shell_escape_args(&args))
+        };
+
+        info!("Opening in terminal: {}", full_command);
+
+        // Use AppleScript to open Terminal.app and run the command
+        let script = format!(
+            r#"tell application "Terminal"
+                activate
+                do script "{}"
+            end tell"#,
+            full_command.replace("\\", "\\\\").replace("\"", "\\\"")
+        );
+
+        tokio::process::Command::new("osascript")
+            .arg("-e")
+            .arg(&script)
+            .spawn()
+            .map_err(|e| ExtensionError::Runtime(format!("Failed to open terminal: {}", e)))?;
+
+        Ok(())
     }
 
     /// Execute an integration extension (WASM/Deno).

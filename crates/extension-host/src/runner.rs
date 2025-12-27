@@ -40,16 +40,18 @@ impl RunnerSession {
 
         // Build command with argument substitution
         let mut cmd = CommandBuilder::new(&config.command);
+        let mut processed_args = Vec::new();
         for arg in &config.args {
             let processed = if let Some(input) = input {
                 arg.replace("{{prompt}}", input)
             } else {
                 arg.replace("{{prompt}}", "")
             };
+            processed_args.push(processed.clone());
             cmd.arg(processed);
         }
 
-        info!("Spawning runner: {} {:?}", config.command, config.args);
+        info!("Spawning runner: {} {:?} (input: {:?})", config.command, processed_args, input);
 
         // Spawn the child process
         let child = pair
