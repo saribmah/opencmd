@@ -1,0 +1,28 @@
+{
+  "id": "shell",
+  "name": "Terminal",
+  "version": "1.0.0",
+  "type": "runner",
+  "description": "Open a terminal shell",
+  "runner": {
+    "command": "/bin/zsh",
+    "args": [],
+    "interactive": true,
+    "pty": true
+  },
+  "commands": [
+    {
+      "id": "new",
+      "name": "New Terminal",
+      "description": "Open a new terminal session",
+      "keywords": ["terminal", "shell", "bash", "zsh", "console"]
+    },
+    {
+      "id": "run-command",
+      "name": "Run Shell Command",
+      "description": "Execute a shell command",
+      "keywords": ["run", "execute", "command", "shell"]
+    }
+  ],
+  "permissions": ["process:spawn", "pty"]
+}

@@ -1,0 +1,36 @@
+[workspace]
+resolver = "2"
+members = [
+    "apps/desktop/src-tauri",
+    "crates/core",
+    "crates/extension-host",
+    "crates/protocol",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+authors = ["OpenCMD Team"]
+
+[workspace.dependencies]
+# Shared dependencies across workspace
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+thiserror = "1"
+anyhow = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+async-trait = "0.1"
+uuid = { version = "1", features = ["v4", "serde"] }
+
+# Tauri
+tauri = { version = "2", features = [] }
+tauri-build = { version = "2", features = [] }
+tauri-plugin-opener = "2"
+
+# Internal crates
+opencmd-core = { path = "crates/core" }
+opencmd-extension-host = { path = "crates/extension-host" }
+opencmd-protocol = { path = "crates/protocol" }

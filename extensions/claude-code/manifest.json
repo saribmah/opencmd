@@ -1,0 +1,28 @@
+{
+  "id": "claude-code",
+  "name": "Claude Code",
+  "version": "1.0.0",
+  "type": "runner",
+  "description": "Run Claude Code CLI for AI-powered coding assistance",
+  "runner": {
+    "command": "claude",
+    "args": ["-p", "{{prompt}}"],
+    "interactive": true,
+    "pty": true
+  },
+  "commands": [
+    {
+      "id": "run",
+      "name": "Run Claude Code",
+      "description": "Start an AI coding session with Claude",
+      "keywords": ["claude", "ai", "code", "assistant", "anthropic"]
+    },
+    {
+      "id": "chat",
+      "name": "Claude Code Chat",
+      "description": "Quick chat with Claude Code",
+      "keywords": ["claude", "chat", "ask", "question"]
+    }
+  ],
+  "permissions": ["process:spawn", "pty"]
+}

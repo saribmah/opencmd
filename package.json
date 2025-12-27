@@ -1,0 +1,20 @@
+{
+  "name": "opencmd",
+  "private": true,
+  "scripts": {
+    "dev": "bun --filter @opencmd/desktop dev",
+    "build": "bun run build:packages && bun --filter @opencmd/desktop build",
+    "build:packages": "bun --filter '@opencmd/*' --filter '!@opencmd/desktop' --filter '!@opencmd/extension-*' build",
+    "build:extensions": "bun --filter '@opencmd/extension-*' build",
+    "tauri": "bun --filter @opencmd/desktop tauri",
+    "typecheck": "bun --filter '*' typecheck"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "extensions/*"
+  ],
+  "devDependencies": {
+    "typescript": "~5.8.3"
+  }
+}

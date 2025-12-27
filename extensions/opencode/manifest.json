@@ -1,0 +1,22 @@
+{
+  "id": "opencode",
+  "name": "OpenCode",
+  "version": "1.0.0",
+  "type": "runner",
+  "description": "Run OpenCode CLI for AI-powered coding",
+  "runner": {
+    "command": "opencode",
+    "args": ["{{prompt}}"],
+    "interactive": true,
+    "pty": true
+  },
+  "commands": [
+    {
+      "id": "run",
+      "name": "Run OpenCode",
+      "description": "Start an AI coding session with OpenCode",
+      "keywords": ["opencode", "ai", "code", "assistant", "sst"]
+    }
+  ],
+  "permissions": ["process:spawn", "pty"]
+}

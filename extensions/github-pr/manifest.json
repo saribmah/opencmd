@@ -1,0 +1,48 @@
+{
+  "id": "github-pr",
+  "name": "GitHub PRs",
+  "version": "1.0.0",
+  "type": "integration",
+  "runtime": "wasm",
+  "main": "dist/index.wasm",
+  "description": "View and manage GitHub Pull Requests",
+  "commands": [
+    {
+      "id": "list-prs",
+      "name": "List Pull Requests",
+      "description": "Show open pull requests",
+      "keywords": ["github", "pr", "pull", "request", "list"]
+    },
+    {
+      "id": "my-prs",
+      "name": "My Pull Requests",
+      "description": "Show your open pull requests",
+      "keywords": ["github", "my", "pr", "pull", "request"]
+    },
+    {
+      "id": "review-prs",
+      "name": "PRs to Review",
+      "description": "Show pull requests awaiting your review",
+      "keywords": ["github", "review", "pr", "pull", "request"]
+    }
+  ],
+  "permissions": [
+    { "network": ["api.github.com"] }
+  ],
+  "config_schema": {
+    "type": "object",
+    "properties": {
+      "token": {
+        "type": "string",
+        "title": "GitHub Token",
+        "description": "Personal access token with repo scope"
+      },
+      "default_repo": {
+        "type": "string",
+        "title": "Default Repository",
+        "description": "Default repository (owner/repo format)"
+      }
+    },
+    "required": ["token"]
+  }
+}
